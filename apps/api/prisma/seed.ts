@@ -12,6 +12,8 @@ async function main() {
   await prisma.budget.deleteMany()
   await prisma.transaction.deleteMany()
   await prisma.card.deleteMany()
+  await prisma.category.deleteMany()
+  await prisma.recurringIncome.deleteMany()
   await prisma.user.deleteMany()
 
   const hashedPassword = await bcrypt.hash('123456', 10)
@@ -27,17 +29,49 @@ async function main() {
   await prisma.card.create({
     data: {
       name: 'Nubank',
+      bank: 'Nubank',
       limit: 3000,
       currentSpend: 1250.90,
       closingDay: 15,
       dueDay: 22,
+      showOnHome: true,
       userId: user.id,
     }
   })
 
+  await prisma.recurringIncome.create({
+    data: {
+      title: 'Salário',
+      amount: 4500,
+      dayOfMonth: 5,
+      active: true,
+      userId: user.id,
+    }
+  })
+
+  const categories = [
+    { name: 'Alimentação', type: TransactionType.EXPENSE },
+    { name: 'Moradia',     type: TransactionType.EXPENSE },
+    { name: 'Transporte',  type: TransactionType.EXPENSE },
+    { name: 'Saúde',       type: TransactionType.EXPENSE },
+    { name: 'Assinaturas', type: TransactionType.EXPENSE },
+    { name: 'Compras',     type: TransactionType.EXPENSE },
+    { name: 'Lazer',       type: TransactionType.EXPENSE },
+    { name: 'Educação',    type: TransactionType.EXPENSE },
+    { name: 'Contas',      type: TransactionType.EXPENSE },
+    { name: 'Salário',     type: TransactionType.INCOME },
+    { name: 'Freelance',   type: TransactionType.INCOME },
+    { name: 'Renda Extra', type: TransactionType.INCOME },
+    { name: 'Mesada',      type: TransactionType.INCOME },
+    { name: 'Investimentos', type: TransactionType.INCOME },
+  ]
+
+  for (const cat of categories) {
+    await prisma.category.create({ data: { ...cat, userId: user.id } })
+  }
+
   const transactions = [
-    { title: 'Salário',      amount: 4500, type: TransactionType.INCOME,  category: 'Renda',       date: new Date('2026-03-01') },
-    { title: 'Freelance',    amount: 800,  type: TransactionType.INCOME,  category: 'Renda',       date: new Date('2026-03-05') },
+    { title: 'Freelance',    amount: 800,  type: TransactionType.INCOME,  category: 'Freelance',   date: new Date('2026-03-05') },
     { title: 'Aluguel',      amount: 1200, type: TransactionType.EXPENSE, category: 'Moradia',     date: new Date('2026-03-05') },
     { title: 'Supermercado', amount: 450,  type: TransactionType.EXPENSE, category: 'Alimentação', date: new Date('2026-03-07') },
     { title: 'Conta de luz', amount: 180,  type: TransactionType.EXPENSE, category: 'Contas',      date: new Date('2026-03-08') },
@@ -62,7 +96,7 @@ async function main() {
   ]
 
   for (const b of budgets) {
-    await prisma.budget.create({ data: { ...b, month: 3, year: 2026, userId: user.id } })
+    await prisma.budget.create({ data: { ...b, month: 3, year: 2026, showOnHome: true, userId: user.id } })
   }
 
   console.log('✅ Seed concluído!')

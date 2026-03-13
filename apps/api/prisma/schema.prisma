@@ -7,14 +7,16 @@ datasource db {
 }
 
 model User {
-  id           String        @id @default(uuid())
-  name         String
-  email        String        @unique
-  password     String
-  createdAt    DateTime      @default(now())
-  transactions Transaction[]
-  cards        Card[]
-  budgets      Budget[]
+  id               String            @id @default(uuid())
+  name             String
+  email            String            @unique
+  password         String
+  createdAt        DateTime          @default(now())
+  transactions     Transaction[]
+  cards            Card[]
+  budgets          Budget[]
+  categories       Category[]
+  recurringIncomes RecurringIncome[]
 }
 
 model Transaction {
@@ -22,7 +24,7 @@ model Transaction {
   title       String
   amount      Float
   type        TransactionType
-  category    String
+  category    String?
   date        DateTime
   description String?
   userId      String
@@ -33,25 +35,49 @@ model Transaction {
 model Card {
   id           String   @id @default(uuid())
   name         String
+  bank         String
   limit        Float
   currentSpend Float    @default(0)
   closingDay   Int
   dueDay       Int
+  showOnHome   Boolean  @default(true)
   userId       String
   user         User     @relation(fields: [userId], references: [id])
   createdAt    DateTime @default(now())
 }
 
 model Budget {
-  id        String   @id @default(uuid())
-  category  String
-  limit     Float
-  spent     Float    @default(0)
-  month     Int
-  year      Int
+  id         String   @id @default(uuid())
+  category   String
+  limit      Float
+  spent      Float    @default(0)
+  month      Int
+  year       Int
+  showOnHome Boolean  @default(true)
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+  createdAt  DateTime @default(now())
+}
+
+model Category {
+  id        String          @id @default(uuid())
+  name      String
+  type      TransactionType
   userId    String
-  user      User     @relation(fields: [userId], references: [id])
-  createdAt DateTime @default(now())
+  user      User            @relation(fields: [userId], references: [id])
+  createdAt DateTime        @default(now())
+}
+
+model RecurringIncome {
+  id          String   @id @default(uuid())
+  title       String
+  amount      Float
+  dayOfMonth  Int
+  active      Boolean  @default(true)
+  description String?
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  createdAt   DateTime @default(now())
 }
 
 enum TransactionType {
