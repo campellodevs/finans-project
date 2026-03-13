@@ -1,7 +1,58 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { loginRequest } from '../services/auth'
+
+const CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%&'
+
+function GlitchText({ text }: { text: string }) {
+  const [displayed, setDisplayed] = useState(text)
+
+  useEffect(() => {
+    let iterations = 0
+    const interval = setInterval(() => {
+      setDisplayed(
+        text.split('').map((char, i) => {
+          if (i < iterations) return char
+          if (char === ' ') return ' '
+          return CHARS[Math.floor(Math.random() * CHARS.length)]
+        }).join('')
+      )
+      if (iterations >= text.length) clearInterval(interval)
+      iterations += 0.5
+    }, 40)
+    return () => clearInterval(interval)
+  }, [text])
+
+  return <span>{displayed}</span>
+}
+
+function ScanlineOverlay() {
+  return (
+    <div
+      className="pointer-events-none fixed inset-0 z-10"
+      style={{
+        background: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.15) 2px, rgba(0,0,0,0.15) 4px)',
+      }}
+    />
+  )
+}
+
+function GridBackground() {
+  return (
+    <div
+      className="fixed inset-0 z-0"
+      style={{
+        backgroundColor: '#000',
+        backgroundImage: `
+          linear-gradient(rgba(0,255,128,0.07) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(0,255,128,0.07) 1px, transparent 1px)
+        `,
+        backgroundSize: '40px 40px',
+      }}
+    />
+  )
+}
 
 export function Login() {
   const { login } = useAuth()
@@ -10,6 +61,12 @@ export function Login() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [blink, setBlink] = useState(true)
+
+  useEffect(() => {
+    const t = setInterval(() => setBlink(b => !b), 530)
+    return () => clearInterval(t)
+  }, [])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -20,64 +77,176 @@ export function Login() {
       login(token, user)
       navigate('/dashboard')
     } catch {
-      setError('Email ou senha incorretos')
+      setError('>> ACESSO NEGADO. VERIFIQUE CREDENCIAIS.')
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div className="min-h-screen bg-white dark:bg-black flex items-center justify-center px-4">
-      <div className="w-full max-w-sm">
-        <div className="mb-10">
-          <h1 className="text-2xl font-medium tracking-tight text-black dark:text-white">FINQ</h1>
-          <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">Entre na sua conta</p>
+    <div className="relative min-h-screen flex items-center justify-center overflow-hidden">
+      <GridBackground />
+      <ScanlineOverlay />
+
+      <div className="fixed top-6 left-6 z-20 font-mono text-xs" style={{ color: '#00ff80' }}>
+        <div>SYS://FINQ.AUTH</div>
+        <div style={{ color: '#00ff8088' }}>v2.0.26 [SECURE]</div>
+      </div>
+      <div className="fixed top-6 right-6 z-20 font-mono text-xs text-right" style={{ color: '#00ff80' }}>
+        <div>STATUS: <span style={{ color: '#ffff00' }}>WAITING INPUT</span></div>
+        <div style={{ color: '#00ff8088' }}>CONN: ENCRYPTED</div>
+      </div>
+      <div className="fixed bottom-6 left-6 z-20 font-mono text-xs" style={{ color: '#00ff8044' }}>
+        ████████░░░░ 66% SECURE
+      </div>
+      <div className="fixed bottom-6 right-6 z-20 font-mono text-xs" style={{ color: '#00ff8044' }}>
+        [ESC] ABORT · [F1] HELP
+      </div>
+
+      <div
+        className="relative z-20 w-full max-w-md mx-4"
+        style={{
+          border: '1px solid #00ff80',
+          boxShadow: '0 0 40px rgba(0,255,128,0.15), inset 0 0 40px rgba(0,255,128,0.03)',
+          backgroundColor: 'rgba(0,0,0,0.85)',
+        }}
+      >
+        <div
+          className="flex items-center justify-between px-4 py-2"
+          style={{ borderBottom: '1px solid #00ff8033', backgroundColor: 'rgba(0,255,128,0.05)' }}
+        >
+          <div className="flex gap-2">
+            <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: '#ff5555' }} />
+            <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: '#ffff55' }} />
+            <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: '#00ff80' }} />
+          </div>
+          <span className="font-mono text-xs" style={{ color: '#00ff8066' }}>AUTH_TERMINAL.EXE</span>
+          <span className="font-mono text-xs" style={{ color: '#00ff8066' }}>■ □ ✕</span>
         </div>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs text-zinc-500 uppercase tracking-widest">Email</label>
-            <input
-              type="email"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              required
-              className="w-full px-4 py-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-black dark:text-white text-sm outline-none focus:border-black dark:focus:border-white transition-colors duration-200"
-              placeholder="seu@email.com"
-            />
+        <div className="p-8">
+          <div className="mb-8 text-center">
+            <h1
+              className="font-mono font-bold tracking-widest"
+              style={{
+                fontSize: '3rem',
+                color: '#00ff80',
+                textShadow: '0 0 20px rgba(0,255,128,0.8), 0 0 40px rgba(0,255,128,0.4)',
+                letterSpacing: '0.3em',
+              }}
+            >
+              <GlitchText text="FINQ" />
+            </h1>
+            <div className="font-mono text-xs mt-1" style={{ color: '#00ff8066', letterSpacing: '0.4em' }}>
+              FINANCIAL CONTROL SYSTEM
+            </div>
+            <div className="font-mono text-xs mt-3" style={{ color: '#ffff0099' }}>
+              {`> INSIRA SUAS CREDENCIAIS`}
+              <span style={{ opacity: blink ? 1 : 0 }}>█</span>
+            </div>
           </div>
 
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs text-zinc-500 uppercase tracking-widest">Senha</label>
-            <input
-              type="password"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              required
-              className="w-full px-4 py-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-black dark:text-white text-sm outline-none focus:border-black dark:focus:border-white transition-colors duration-200"
-              placeholder="••••••••"
-            />
-          </div>
+          <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+            <div className="flex flex-col gap-1.5">
+              <label className="font-mono text-xs" style={{ color: '#00ff8099', letterSpacing: '0.2em' }}>
+                {'>'} EMAIL_ID:
+              </label>
+              <input
+                type="email"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                required
+                className="w-full px-4 py-3 font-mono text-sm outline-none"
+                style={{
+                  backgroundColor: 'rgba(0,255,128,0.05)',
+                  border: '1px solid #00ff8044',
+                  color: '#00ff80',
+                  caretColor: '#00ff80',
+                }}
+                onFocus={e => e.target.style.borderColor = '#00ff80'}
+                onBlur={e => e.target.style.borderColor = '#00ff8044'}
+                placeholder="usuario@sistema.com"
+              />
+            </div>
 
-          {error && (
-            <p className="text-xs text-rose-500">{error}</p>
-          )}
+            <div className="flex flex-col gap-1.5">
+              <label className="font-mono text-xs" style={{ color: '#00ff8099', letterSpacing: '0.2em' }}>
+                {'>'} SENHA_KEY:
+              </label>
+              <input
+                type="password"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                required
+                className="w-full px-4 py-3 font-mono text-sm outline-none"
+                style={{
+                  backgroundColor: 'rgba(0,255,128,0.05)',
+                  border: '1px solid #00ff8044',
+                  color: '#00ff80',
+                  caretColor: '#00ff80',
+                }}
+                onFocus={e => e.target.style.borderColor = '#00ff80'}
+                onBlur={e => e.target.style.borderColor = '#00ff8044'}
+                placeholder="••••••••"
+              />
+            </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-3 rounded-xl bg-black dark:bg-white text-white dark:text-black text-sm font-medium hover:opacity-80 transition-opacity duration-200 disabled:opacity-50 mt-2"
+            {error && (
+              <div
+                className="font-mono text-xs p-3"
+                style={{
+                  color: '#ff5555',
+                  border: '1px solid #ff555544',
+                  backgroundColor: 'rgba(255,85,85,0.05)',
+                }}
+              >
+                {error}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-3 font-mono text-sm font-bold mt-2 transition-all duration-200"
+              style={{
+                backgroundColor: loading ? 'transparent' : '#00ff80',
+                color: loading ? '#00ff80' : '#000',
+                border: '1px solid #00ff80',
+                boxShadow: loading ? 'none' : '0 0 20px rgba(0,255,128,0.4)',
+                letterSpacing: '0.3em',
+              }}
+              onMouseEnter={e => {
+                if (!loading) {
+                  (e.target as HTMLButtonElement).style.backgroundColor = '#000'
+                  ;(e.target as HTMLButtonElement).style.color = '#00ff80'
+                }
+              }}
+              onMouseLeave={e => {
+                if (!loading) {
+                  (e.target as HTMLButtonElement).style.backgroundColor = '#00ff80'
+                  ;(e.target as HTMLButtonElement).style.color = '#000'
+                }
+              }}
+            >
+              {loading ? '>> AUTENTICANDO...' : '>> ACESSAR SISTEMA'}
+            </button>
+          </form>
+
+          <div
+            className="mt-6 pt-4 font-mono text-xs text-center"
+            style={{ borderTop: '1px solid #00ff8022', color: '#00ff8055' }}
           >
-            {loading ? 'Entrando...' : 'Entrar'}
-          </button>
-        </form>
-
-        <p className="text-sm text-zinc-500 dark:text-zinc-400 text-center mt-6">
-          Não tem conta?{' '}
-          <Link to="/register" className="text-black dark:text-white font-medium hover:underline">
-            Cadastre-se
-          </Link>
-        </p>
+            {'> '}
+            <Link
+              to="/register"
+              style={{ color: '#00ff8088' }}
+              onMouseEnter={e => (e.target as HTMLElement).style.color = '#00ff80'}
+              onMouseLeave={e => (e.target as HTMLElement).style.color = '#00ff8088'}
+            >
+              CRIAR NOVA CONTA
+            </Link>
+          </div>
+        </div>
       </div>
     </div>
   )
