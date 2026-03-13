@@ -1,0 +1,59 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id           String        @id @default(uuid())
+  name         String
+  email        String        @unique
+  createdAt    DateTime      @default(now())
+  transactions Transaction[]
+  cards        Card[]
+  budgets      Budget[]
+}
+
+model Transaction {
+  id          String          @id @default(uuid())
+  title       String
+  amount      Float
+  type        TransactionType
+  category    String
+  date        DateTime
+  description String?
+  userId      String
+  user        User            @relation(fields: [userId], references: [id])
+  createdAt   DateTime        @default(now())
+}
+
+model Card {
+  id           String   @id @default(uuid())
+  name         String
+  limit        Float
+  currentSpend Float    @default(0)
+  closingDay   Int
+  dueDay       Int
+  userId       String
+  user         User     @relation(fields: [userId], references: [id])
+  createdAt    DateTime @default(now())
+}
+
+model Budget {
+  id        String   @id @default(uuid())
+  category  String
+  limit     Float
+  spent     Float    @default(0)
+  month     Int
+  year      Int
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+}
+
+enum TransactionType {
+  INCOME
+  EXPENSE
+}
