@@ -8,7 +8,7 @@ export async function authenticate(req: FastifyRequest, reply: FastifyReply) {
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return reply.status(401).send({ message: 'Token não fornecido' })
   }
-
+  
   const token = authHeader.split(' ')[1]
 
   try {
