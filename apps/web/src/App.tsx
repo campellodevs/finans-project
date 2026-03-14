@@ -10,7 +10,7 @@ function formatCurrency(value: number) {
 }
 
 export function App() {
-  const { data, loading } = useDashboard()
+  const { data, loading, refresh } = useDashboard()
 
   if (loading) {
     return (
@@ -21,26 +21,13 @@ export function App() {
   }
 
   return (
-    <Layout>
+    <Layout onRefresh={refresh}>
       <div className="flex flex-col gap-6">
-
         <div className="grid grid-cols-3 gap-4">
-          <SummaryCard
-            title="Saldo atual"
-            value={formatCurrency(data?.balance ?? 0)}
-          />
-          <SummaryCard
-            title="Entradas"
-            value={formatCurrency(data?.totalIncome ?? 0)}
-            positive={true}
-          />
-          <SummaryCard
-            title="Gastos"
-            value={formatCurrency(data?.totalExpense ?? 0)}
-            positive={false}
-          />
+          <SummaryCard title="Saldo atual"  value={formatCurrency(data?.balance ?? 0)} />
+          <SummaryCard title="Entradas"     value={formatCurrency(data?.totalIncome ?? 0)}  positive={true} />
+          <SummaryCard title="Gastos"       value={formatCurrency(data?.totalExpense ?? 0)} positive={false} />
         </div>
-
         <div className="grid grid-cols-3 gap-4">
           <div className="col-span-2">
             <TransactionList transactions={data?.transactions ?? []} />
@@ -51,9 +38,7 @@ export function App() {
             ))}
           </div>
         </div>
-
         <BudgetList budgets={data?.budgets ?? []} />
-
       </div>
     </Layout>
   )
